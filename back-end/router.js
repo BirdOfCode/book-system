@@ -1,0 +1,397 @@
+const express = require('express')
+
+const mongoose = require('mongoose')
+
+const jwt = require('jsonwebtoken');
+const expressJwt = require('express-jwt')
+
+//连接MongoDB数据库，自动创建book-system集合
+mongoose.connect('mongodb://localhost/book-system', { useNewUrlParser: true, useUnifiedTopology: true })
+
+const router = express.Router()
+
+//token配置
+router.use(expressJwt({
+  secret: 'zyqtoken'
+}).unless({
+  path: ['/api/register', '/api/login']
+}))
+
+//对所有路由进行token认证
+router.use(function (err, req, res, next) {
+  if (err.name === 'UnauthorizedError') {
+    res.send('非法token');
+  }
+})
+
+// 用户数据存储模型
+const Users = mongoose.model('users', new mongoose.Schema({
+  username: String,
+  password: String,
+  Identity: Number,   //  1 代表是管理员  0 代表普通用户
+  detailId: String,
+  collectId: String,
+  keyWords: String,
+  createTime: Date,
+  updateTime: Date
+}, {
+  versionKey: false,
+  timestamps: { createdAt: 'createTime', updatedAt: 'updateTime' }
+}))
+
+//图书数据存储模型
+const Book = mongoose.model('books', new mongoose.Schema({
+  name: String,
+  author: String,
+  ISBN: String,
+  price: Number,
+  kind: String,
+  cover: String,
+  detail: String,
+  abstract: String,
+  keyWords: String,
+  createTime: Date,
+  updateTime: Date
+}, {
+  versionKey: false,
+  timestamps: { createdAt: 'createTime', updatedAt: 'updateTime' }
+}))
+
+//用户注册
+router.post('/api/register', (req, res) => {
+  Users
+    .findOne({ username: req.body.username })
+    .then(result => {
+      if (result != null) {
+        res.send({
+          code: 300,
+          message: '用户已注册'
+        })
+      } else {
+        Users.create({ username: req.body.username, password: req.body.password, Identity: 0 })
+          .then(() => {
+            res.send({
+              code: 200,
+              message: '用户注册成功'
+            })
+          })
+      }
+    })
+
+})
+
+//用户登录
+router.post('/api/login', (req, res) => {
+  Users
+    .findOne({ username: req.body.username, password: req.body.password })
+    .then(result => {
+
+      if (result != null) {
+        // 成功登录之后返回 token
+        const token = 'Bearer ' + jwt.sign(
+          {
+            username: result.username
+          },
+          'zyqtoken',
+          {
+            expiresIn: 3600 * 24
+          }
+        )
+        res.send({
+          code: 200,
+          message: '登录成功',
+          data: result,
+          token
+        })
+      } else {
+        res.send({
+          code: 404,
+          message: '用户名或者密码错误',
+        })
+      }
+    }
+    )
+})
+
+//增加图书
+router.post('/api/addBook', (req, res) => {
+  Book
+    .create(req.body)
+    .then(result => {
+      res.send({
+        code: 200,
+        message: '图书添加成功'
+      })
+    },
+      rej => {
+        res.send({
+          code: 300,
+          message: '图书添加失败'
+        })
+      })
+})
+
+//删除图书
+router.delete('/api/delBook/:id', (req, res) => {
+  Book
+    .findByIdAndDelete(req.params.id)
+    .then(result => {
+      res.send({
+        code: 200,
+        message: '图书删除成功'
+      })
+    },
+      rej => {
+        res.send({
+          code: 300,
+          message: '图书删除失败'
+        })
+      })
+})
+
+//修改图书
+router.put('/api/editBook/:id', (req, res) => {
+  Book
+    .findByIdAndUpdate(req.params.id, req.body)
+    .then(result => {
+      res.send({
+        code: 200,
+        message: '图书修改成功'
+      })
+    },
+      rej => {
+        res.send({
+          code: 300,
+          message: '图书修改失败'
+        })
+      })
+})
+
+//查询全部图书
+router.get('/api/bookList', (req, res) => {
+  Book
+    .find()
+    .then(result => {
+      res.send({
+        code: 200,
+        message: '查询成功',
+        data: result
+      })
+    },
+      rej => {
+        res.send({
+          code: 404,
+          message: '未找到图书'
+        })
+      })
+})
+
+//查询某本图书
+router.get('/api/searchBook/:id', (req, res) => {
+  Book
+    .findById(req.params.id)
+    .then(
+      result => {
+        res.send({
+          code: 200,
+          message: '查询成功',
+          data: result
+        })
+      },
+      rej => {
+        res.send({
+          code: 404,
+          message: '未找到该图书'
+        })
+      }
+    )
+})
+
+//查询全部用户
+router.get('/api/userList', (req, res) => {
+  Users
+    .find({ Identity: 0 })
+    .then(result => {
+      res.send({
+        code: 200,
+        message: '查询成功',
+        data: result
+      })
+    },
+      rej => {
+        res.send({
+          code: 600,
+          message: "未登录"
+        })
+      })
+})
+
+//查询某个用户
+router.get('/api/searchUser/:id', (req, res) => {
+  Users
+    .findById(req.params.id)
+    .then(result => {
+      res.send({
+        code: 200,
+        message: '查询成功',
+        data: result
+      })
+    },
+      rej => {
+        res.send({
+          code: 404,
+          message: '未找到该用户'
+        })
+      })
+})
+
+//删除某个用户
+router.delete('/api/delUser/:id', (req, res) => {
+  Users
+    .findByIdAndDelete(req.params.id)
+    .then(result => {
+      res.send({
+        code: 200,
+        message: '用户删除成功',
+      })
+    },
+      rej => {
+        res.send({
+          code: 300,
+          message: '用户删除失败'
+        })
+      })
+})
+
+//修改某个用户
+router.put('/api/editUser/:id', (req, res) => {
+  Users
+    .findByIdAndUpdate(req.params.id, req.body)
+    .then(result => {
+      res.send({
+        code: 200,
+        message: '用户修改成功',
+      })
+    },
+      rej => {
+        res.send({
+          code: 300,
+          message: '用户修改失败'
+        })
+      })
+})
+
+//查询某类图书
+router.get('/api/bookKind/:kind', (req, res) => {
+
+  Book
+    .find({ kind: req.params.kind })
+    .then(result => {
+      if (result.length != 0) {
+        res.send({
+          code: 200,
+          message: '查询成功',
+          data: result
+        })
+      }
+    },
+      rej => {
+        res.send({
+          code: 404,
+          message: "获取图书失败"
+        })
+      })
+})
+
+//增加收藏图书
+router.post('/api/user', (req, res) => {
+  collectId = ''
+  Users
+    .findOne({ username: req.body.username })
+    .then(result => {
+      if (result.collectId === undefined || result.collectId === '') {
+        collectId = req.body.isbn
+      }
+      // else if (result.collectId === '') {
+      //   collectId = req.body.isbn
+      // } 
+      else {
+        collectId = result.collectId + ',' + req.body.isbn
+      }
+      return Users.findOneAndUpdate({ username: req.body.username }, { collectId: collectId })
+    })
+    .then(() => {
+      res.send({
+        code: 200,
+        message: '收藏成功'
+      })
+    })
+})
+
+//增加查看过详情的图书
+router.put('/api/user', (req, res) => {
+  detailId = ''
+  Users
+    .findOne({ username: req.body.username })
+    .then(result => {
+      if (result.detailId === undefined || result.detailId === '') {
+        detailId = req.body.isbn
+      }
+      // else if (result.detailId === '') {
+      //   detailId = req.body.isbn
+      // }
+      else {
+        detailId = result.detailId + ',' + req.body.isbn
+      }
+      return Users.findOneAndUpdate({ username: req.body.username }, { detailId: detailId })
+    })
+    .then(() => {
+      res.send({
+        code: 200,
+        message: '查询成功'
+      })
+    })
+})
+
+//搜索提示功能
+router.get('/api/user', (req, res) => {
+  Book
+    .find()
+    .then(result => {
+      res.send({
+        code: 200,
+        message: '查询成功',
+        data: result
+      })
+    },
+      rej => {
+        res.send({
+          code: 404,
+          message: '未找到图书'
+        })
+      })
+})
+
+//根据书名查找图书
+router.get('/api/user/:name', (req, res) => {
+  Book
+    .findOne({ name: req.params.name })
+    .then(
+      result => {
+        if (result != null)
+          res.send({
+            code: 200,
+            message: '查询成功',
+            data: result
+          })
+      },
+      rej => {
+        res.send({
+          code: 404,
+          message: '未找到该图书'
+        })
+      }
+    )
+})
+
+module.exports = router
