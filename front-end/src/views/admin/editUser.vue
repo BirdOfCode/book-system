@@ -20,7 +20,7 @@
         <el-input v-model="user.collectId"></el-input>
       </el-form-item>
       <el-form-item label="关键词">
-        <el-input v-model="user.keyWords"></el-input>
+        <el-input v-model="user.keyWords" disabled></el-input>
       </el-form-item>
 
       <el-form-item>

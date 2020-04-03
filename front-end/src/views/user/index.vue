@@ -71,6 +71,10 @@
                          lazy>
               <books kind='technology'></books>
             </el-tab-pane>
+            <el-tab-pane label="个性推荐"
+                         lazy>
+              <recommendation></recommendation>
+            </el-tab-pane>
           </el-tabs>
         </el-main>
       </el-container>
@@ -110,6 +114,7 @@ body {
 
 <script>
 import books from '../user/books'
+import recommendation from '../user/recommendation'
 import { getAllBook } from '../../network/admin'
 import { search } from '../../network/user'
 
@@ -121,7 +126,8 @@ export default {
     };
   },
   components: {
-    books
+    books,
+    recommendation
   },
   methods: {
     search () {

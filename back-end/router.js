@@ -10,6 +10,12 @@ mongoose.connect('mongodb://localhost/book-system', { useNewUrlParser: true, use
 
 const router = express.Router()
 
+//分词模块
+const nodejieba = require("nodejieba")
+
+//计算关键词相似度模块
+var natural = require('natural')
+
 //token配置
 router.use(expressJwt({
   secret: 'zyqtoken'
@@ -394,4 +400,86 @@ router.get('/api/user/:name', (req, res) => {
     )
 })
 
+//分析图书摘要，进行分词，并将权重前5的单词作为图书关键词
+Book
+  .find()
+  .then(result => {
+    const topN = 5
+    let arr = []
+    for (let i of result) {
+      arr = nodejieba.extract(i.abstract, topN).map(item => {
+        return item.word
+      })
+      i.keyWords = arr.toString()
+      Book.findOneAndUpdate({ name: i.name }, i)
+    }
+  })
+
+//根据用户收藏和查看详情的图书的ISBN,提取对应的图书关键词，进行权重比较，提取权重前5的单词作为用户关键词
+Users
+  .find({ Identity: 0 })
+  .then(result => {
+    for (let i of result) {
+      (async function () {
+        let sortArr = []
+        let MyKeyWords = []
+        let bookISBN = (i.detailId + ',' + i.collectId).split(',').filter(item => {
+          return item !== 'undefined' && item !== ''
+        })
+        // console.log(bookISBN);
+        for (let m of bookISBN) {
+          await Book.findOne({ ISBN: m })
+            .then(res => {
+              const topN = 5
+              backVal = nodejieba.extract(res.abstract, topN)
+              for (let n of backVal) {
+                sortArr.push(n)
+              }
+            })
+        }
+        Array.from(new Set(sortArr)).sort((a, b) => {
+          return b.weight - a.weight
+        })
+        // console.log(sortArr);
+        for (let i = 0; i < 5; i++) {
+          MyKeyWords.push(sortArr[i].word)
+        }
+        MyKeyWords = MyKeyWords.toString()
+        // console.log(MyKeyWords);
+        await Users.findOneAndUpdate({ username: i.username }, { keyWords: MyKeyWords })
+      })()
+    }
+  })
+
+//基于内容推荐功能
+router.get('/api/recommendation/:username', (req, res) => {
+  let userKeyWords = ''
+  let similarBook = []
+  Users
+    .findOne({ username: req.params.username })
+    .then(result => {
+      // console.log(result);
+
+      userKeyWords = result.keyWords
+      return Book.find()
+    })
+    .then(result => {
+      for (let m of result) {
+        let similar = natural.JaroWinklerDistance(userKeyWords, m.keyWords)
+        m.similar = similar
+      }
+      result.sort((a, b) => {
+        return b.similar - a.similar
+      })
+      for (let i = 0; i < 8; i++) {
+        similarBook.push(result.shift())
+      }
+      res.send({
+        code: 200,
+        message: '推荐成功',
+        data: similarBook
+      })
+    })
+
+})
 module.exports = router

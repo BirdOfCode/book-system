@@ -4,7 +4,7 @@ export default function axios (option) {
   // 1.创建axios的实例
   // baseURL等配置才只会配置在实例上，如果不使用create（），请求全都使用同一个配置（全局配置）
   const instance = orgin.create({
-    baseURL: 'http://192.168.0.100:3000/api',
+    baseURL: 'http://192.168.0.101:3000/api',
     timeout: 5000
   })
   //请求拦截，在请求头里加入token

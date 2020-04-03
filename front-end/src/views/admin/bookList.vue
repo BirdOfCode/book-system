@@ -26,6 +26,9 @@
             <el-form-item label="摘要">
               <span>{{ props.row.abstract }}</span>
             </el-form-item>
+            <el-form-item label="关键词">
+              <span>{{ props.row.keyWords }}</span>
+            </el-form-item>
           </el-form>
         </template>
       </el-table-column>

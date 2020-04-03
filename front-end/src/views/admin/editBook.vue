@@ -29,6 +29,9 @@
         <el-input type="textarea"
                   v-model="book.abstract"></el-input>
       </el-form-item>
+       <el-form-item label="关键词">
+        <el-input v-model="book.keyWords" disabled></el-input>
+      </el-form-item>
 
       <el-form-item>
         <el-button type="primary"

@@ -8,6 +8,15 @@ export function getBook (kind) {
   })
 }
 
+//获取个性推荐图书
+export function recommendation (username) {
+  return axios({
+    method: 'get',
+    url: `/recommendation/${username}`
+  })
+}
+
+
 //收藏图书
 export function collect (isbn, username) {
   return axios({
