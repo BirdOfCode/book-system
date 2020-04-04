@@ -460,7 +460,6 @@ async function CB (req) {
   await Users
     .findOne({ username: req.params.username })
     .then(result => {
-
       userKeyWords = result.keyWords
       return Book.find()
     })
