@@ -400,6 +400,8 @@ router.get('/api/user/:name', (req, res) => {
     )
 })
 
+
+
 //分析图书摘要，进行分词，并将权重前5的单词作为图书关键词
 Book
   .find()
@@ -451,14 +453,13 @@ Users
     }
   })
 
-//基于内容推荐功能
-router.get('/api/recommendation/:username', (req, res) => {
+//基于内容的推荐，返回similarBook推荐结果
+async function CB (req) {
   let userKeyWords = ''
   let similarBook = []
-  Users
+  await Users
     .findOne({ username: req.params.username })
     .then(result => {
-      // console.log(result);
 
       userKeyWords = result.keyWords
       return Book.find()
@@ -467,6 +468,7 @@ router.get('/api/recommendation/:username', (req, res) => {
       for (let m of result) {
         let similar = natural.JaroWinklerDistance(userKeyWords, m.keyWords)
         m.similar = similar
+        // console.log(similar);
       }
       result.sort((a, b) => {
         return b.similar - a.similar
@@ -474,12 +476,18 @@ router.get('/api/recommendation/:username', (req, res) => {
       for (let i = 0; i < 8; i++) {
         similarBook.push(result.shift())
       }
-      res.send({
-        code: 200,
-        message: '推荐成功',
-        data: similarBook
-      })
     })
+  return similarBook
+}
 
+//图书推荐
+router.get('/api/recommendation/:username', async (req, res) => {
+  let recommendation1 = await CB(req)
+
+  res.send({
+    code: 200,
+    message: '推荐成功',
+    data: recommendation1
+  })
 })
 module.exports = router
