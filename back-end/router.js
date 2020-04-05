@@ -400,8 +400,6 @@ router.get('/api/user/:name', (req, res) => {
     )
 })
 
-
-
 //分析图书摘要，进行分词，并将权重前5的单词作为图书关键词
 Book
   .find()
@@ -479,14 +477,70 @@ async function CB (req) {
   return similarBook
 }
 
+//基于用户的协同过滤，返回similarBook推荐结果
+async function UserCF (req) {
+  let userKeyWords = ''
+  let tempArr = []
+  let similarUser = []
+  let bookISBN = []
+  let similarBook = []
+  await Users
+    .findOne({ username: req.params.username })
+    .then(result => {
+      userKeyWords = result.keyWords
+      return Users.find({ Identity: 0 })
+    })
+    .then(async result => {
+      for (let m of result) {
+        if (m.username === req.params.username) {
+          continue
+        }
+        let similar = natural.JaroWinklerDistance(userKeyWords, m.keyWords)
+        m.similar = similar
+        tempArr.push(m)
+      }
+      tempArr.sort((a, b) => {
+        return b.similar - a.similar
+      })
+      for (let i = 0; i < 3; i++) {
+        similarUser.push(tempArr.shift())
+      }
+      for (let n of similarUser) {
+        let book = (n.detailId + ',' + n.collectId).split(',').filter(item => {
+          return item !== 'undefined' && item !== ''
+        })
+        for (let j of book) {
+          bookISBN.push(j)
+        }
+      }
+      //得到的相似用户历史操作的图书isbn
+      bookISBN = Array.from(new Set(bookISBN))
+      for (let m of bookISBN) {
+        let result = await Book.findOne({ ISBN: m })
+        similarBook.push(result)
+      }
+    })
+  return similarBook
+}
+
 //图书推荐
 router.get('/api/recommendation/:username', async (req, res) => {
-  let recommendation1 = await CB(req)
-
+  // let recommendation1 = await CB(req)
+  // let recommendation2 = await UserCF(req)
+  let recommendation = []
+  await Promise.all([CB(req), UserCF(req)])
+    .then(result => {
+      recommendation = result[0].concat(result[1])
+      var hash = {};
+      recommendation = recommendation.reduce(function (item, next) {
+        hash[next.name] ? '' : hash[next.name] = true && item.push(next);
+        return item;
+      }, [])
+    })
   res.send({
     code: 200,
     message: '推荐成功',
-    data: recommendation1
+    data: recommendation
   })
 })
 module.exports = router

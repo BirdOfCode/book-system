@@ -66,6 +66,8 @@ export default {
   created () {
     recommendation(this.$store.state.username)
       .then(res => {
+        console.log(res);
+        
         if (res.data.code === 200) {
           this.books = res.data.data
         }
