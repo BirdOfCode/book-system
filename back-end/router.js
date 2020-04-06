@@ -318,9 +318,9 @@ router.post('/api/user', (req, res) => {
       if (result.collectId === undefined || result.collectId === '') {
         collectId = req.body.isbn
       }
-      // else if (result.collectId === '') {
-      //   collectId = req.body.isbn
-      // } 
+      else if (result.detailId.indexOf(req.body.isbn) != -1) {
+        return
+      }
       else {
         collectId = result.collectId + ',' + req.body.isbn
       }
@@ -342,10 +342,9 @@ router.put('/api/user', (req, res) => {
     .then(result => {
       if (result.detailId === undefined || result.detailId === '') {
         detailId = req.body.isbn
+      } else if (result.detailId.indexOf(req.body.isbn) != -1) {
+        return
       }
-      // else if (result.detailId === '') {
-      //   detailId = req.body.isbn
-      // }
       else {
         detailId = result.detailId + ',' + req.body.isbn
       }
@@ -543,4 +542,5 @@ router.get('/api/recommendation/:username', async (req, res) => {
     data: recommendation
   })
 })
+
 module.exports = router
