@@ -5,14 +5,14 @@
           v-for="(item,index) in books"
           :key="index">
         <div>
-          <el-image style="width:50%;height:200px;float:left"
+          <el-image style="width:40%;height:200px;float:left"
                     :src='item.cover'
                     fit="fill"></el-image>
           <div class="info">
-            <p>{{item.name}}</p>
-            <p>{{item.author}}</p>
-            <p>{{item.price}}</p>
-            <p>{{item.ISBN}}</p>
+            <p>书名：{{item.name}}</p>
+            <p>作者：{{item.author}}</p>
+            <p>价格：{{item.price}}</p>
+            <p>ISBN：{{item.ISBN}}</p>
           </div>
           <div>
             <a :href="item.detail"

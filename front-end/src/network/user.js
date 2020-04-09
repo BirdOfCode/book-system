@@ -16,7 +16,6 @@ export function recommendation (username) {
   })
 }
 
-
 //收藏图书
 export function collect (isbn, username) {
   return axios({

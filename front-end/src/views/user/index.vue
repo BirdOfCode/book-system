@@ -94,7 +94,7 @@ body {
 }
 .tabs {
   margin: 0 auto;
-  width: 65vw;
+  width: 80vw;
 }
 .el-header {
   background-color: #b3c0d1;

@@ -27,18 +27,7 @@ export default function axios (option) {
         window.localStorage.setItem('token', config.data.token);
       }
       return config;
-    },
-    // error => {
-    //   const errRes = error.response;
-    //   if (errRes.status === 401) {
-    //     window.localStorage.removeItem('token');
-    //     swal('Auth Error!', `${errRes.data.error.message}, please login!`, 'error')
-    //       .then(() => {
-    //         history.push('/login');
-    //       });
-    //   }
-    //   return Promise.reject(error.message);   // 返回接口返回的错误信息
-    // }
+    }
   )
 
   return instance(option)
