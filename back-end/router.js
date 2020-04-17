@@ -403,9 +403,11 @@ router.get('/api/user/:name', (req, res) => {
 Book
   .find()
   .then(result => {
+    //topN为返回的个数
     const topN = 5
     let arr = []
     for (let i of result) {
+      // 返回权重前五的单词
       arr = nodejieba.extract(i.abstract, topN).map(item => {
         return item.word
       })
@@ -425,7 +427,6 @@ Users
         let bookISBN = (i.detailId + ',' + i.collectId).split(',').filter(item => {
           return item !== 'undefined' && item !== ''
         })
-        // console.log(bookISBN);
         for (let m of bookISBN) {
           await Book.findOne({ ISBN: m })
             .then(res => {
@@ -439,12 +440,10 @@ Users
         Array.from(new Set(sortArr)).sort((a, b) => {
           return b.weight - a.weight
         })
-        // console.log(sortArr);
         for (let i = 0; i < 5; i++) {
           MyKeyWords.push(sortArr[i].word)
         }
         MyKeyWords = MyKeyWords.toString()
-        // console.log(MyKeyWords);
         await Users.findOneAndUpdate({ username: i.username }, { keyWords: MyKeyWords })
       })()
     }
