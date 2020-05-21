@@ -1,5 +1,6 @@
 <template>
-  <div>
+  <div class="login">
+    
     <el-card class="box-card">
       <p class="title">图书推荐系统</p>
       <el-form :model="userInfo"
@@ -87,10 +88,15 @@ export default {
 }
 </script>
 <style scoped>
+.login {
+  background-image: url("../assets/img/bg1.jpg");
+  height: 100vh;
+}
 .title {
   font-size: 35px;
   margin: 0 0 30px 0;
   text-align: center;
+  
 }
 .box-card {
   position: absolute;
@@ -99,6 +105,9 @@ export default {
   top: 50%;
   left: 50%;
   margin: -150px 0 0 -250px;
+  opacity: 0.9;
+  border: 1px white;
+  background-color:rgba(255, 255, 255,.5);
 }
 .el-button {
   margin-right: 30px;

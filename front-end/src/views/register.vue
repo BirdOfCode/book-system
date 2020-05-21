@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <div class="login">
     <el-card class="box-card">
-      <p class="title">图书推荐系统</p>
+      <p class="title">用户注册</p>
       <el-form :model="userInfo"
                :rules="rules"
                ref="ruleForm"
@@ -84,6 +84,10 @@ export default {
   margin: 0 0 30px 0;
   text-align: center;
 }
+.login {
+  background-image: url("../assets/img/bg1.jpg");
+  height: 100vh;
+}
 .box-card {
   position: absolute;
   width: 500px;
@@ -91,6 +95,7 @@ export default {
   top: 50%;
   left: 50%;
   margin: -150px 0 0 -250px;
+  background-color: rgba(255, 255, 255, 0.5);
 }
 .el-button {
   margin-right: 30px;
